@@ -9,23 +9,30 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
 
-public class Calculator extends CalculatorBaseListener
-{
+public class Calculator extends CalculatorBaseListener {
 
     Deque<Integer> numbers = new ArrayDeque<>();
 
     @Override
-    public void exitExpression(CalculatorParser.ExpressionContext ctx)
-    {
-        System.out.println("exitExpression: "+ctx.getText());
+    public void exitExpression(CalculatorParser.ExpressionContext ctx) {
+        System.out.println("exitExpression: " + ctx.getText());
         Integer value = numbers.pop();
-        for (int i = 1; i < ctx.getChildCount(); i = i+2)
-        {
-            if (Objects.equals(ctx.getChild(i).getText(), "+"))
-            {
-                value = value + numbers.pop();
-            } else {
-                value = value - numbers.pop();
+        for (int i = 1; i < ctx.getChildCount(); i += 2) {
+            String operator = ctx.getChild(i).getText();
+            Integer operand = numbers.pop();
+            switch (operator) {
+                case "+":
+                    value += operand;
+                    break;
+                case "-":
+                    value -= operand;
+                    break;
+                case "*":
+                    value *= operand;
+                    break;
+                case "/":
+                    value /= operand;
+                    break;
             }
         }
         numbers.add(value);
@@ -33,10 +40,9 @@ public class Calculator extends CalculatorBaseListener
     }
 
     @Override
-    public void exitIntegralExpression(CalculatorParser.IntegralExpressionContext ctx)
-    {
-        System.out.println("exitIntegralExpression: "+ctx.getText());
-        if (ctx.MINUS() != null){
+    public void exitIntegralExpression(CalculatorParser.IntegralExpressionContext ctx) {
+        System.out.println("exitIntegralExpression: " + ctx.getText());
+        if (ctx.MINUS() != null) {
             numbers.add(-1 * Integer.valueOf(ctx.INT().toString()));
         } else {
             numbers.add(Integer.valueOf(ctx.INT().toString()));
@@ -44,36 +50,46 @@ public class Calculator extends CalculatorBaseListener
         super.exitIntegralExpression(ctx);
     }
 
-    private Integer getResult()
-    {
+    @Override
+    public void exitMultiplyingExpression(CalculatorParser.MultiplyingExpressionContext ctx) {
+        System.out.println("exitMultiplyingExpression: " + ctx.getText());
+        Integer value = numbers.pop();
+        for (int i = 1; i < ctx.getChildCount(); i += 2) {
+            String operator = ctx.getChild(i).toString();
+            Integer operand = numbers.pop();
+            switch (operator) {
+                case "*":
+                    value *= operand;
+                    break;
+                case "/":
+                    value /= operand;
+                    break;
+            }
+        }
+        numbers.add(value);
+        super.exitMultiplyingExpression(ctx);
+    }
+
+    private Integer getResult() {
         return numbers.peek();
     }
 
     @Override
-    public void exitEveryRule(ParserRuleContext ctx)
-    {
-        System.out.println("exitEveryRule: "+ctx.getText());
+    public void exitEveryRule(ParserRuleContext ctx) {
+        System.out.println("exitEveryRule: " + ctx.getText());
         super.exitEveryRule(ctx);
     }
 
-
-
-
-
-    public static void main(String[] args) throws Exception
-    {
-      //  CharStream charStreams = CharStreams.fromFileName("./example.txt");
-        Integer result = calc("1 + -2 - 3");
+    public static void main(String[] args) throws Exception {
+        Integer result = calc("1 + 2 * 3 - 4 / 2");
         System.out.println("Result = " + result);
     }
 
-    public static Integer calc(String expression)
-    {
+    public static Integer calc(String expression) {
         return calc(CharStreams.fromString(expression));
     }
 
-    public static Integer calc(CharStream charStream)
-    {
+    public static Integer calc(CharStream charStream) {
         CalculatorLexer lexer = new CalculatorLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
@@ -85,6 +101,5 @@ public class Calculator extends CalculatorBaseListener
         walker.walk(mainListener, tree);
         return mainListener.getResult();
     }
-
 
 }

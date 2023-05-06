@@ -1,7 +1,7 @@
 grammar Calculator;
 
 expression: multiplyingExpression((PLUS | MINUS) multiplyingExpression)*;
-multiplyingExpression: powExpression ((MULT | DIV) powExpression)*;
+multiplyingExpression: powExpression ((MULT | DIV) powExpression | (POW) powExpression)*;
 powExpression: integralExpression ((POW | SQRT) integralExpression)*;
 integralExpression: MINUS INT | INT;
 
@@ -12,5 +12,4 @@ MULT: '*' ;
 DIV: '/' ;
 POW: '^' ;
 SQRT: 'sqrt' ;
-INTEGRAL: 'cal';
 WS : [ \t\r\n]+ -> skip ;
